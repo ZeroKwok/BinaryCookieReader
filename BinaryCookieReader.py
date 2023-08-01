@@ -13,7 +13,7 @@
 
 import sys
 from struct import unpack
-from io import StringIO
+from io import BytesIO
 from time import strftime, gmtime
 
 if len(sys.argv) != 2:
@@ -31,7 +31,7 @@ except IOError as e:
 
 file_header = binary_file.read(4)  # File Magic String:cook
 
-if str(file_header) != 'cook':
+if file_header.decode() != 'cook':
     print("Not a Cookies.binarycookie file")
     sys.exit(0)
 
@@ -55,7 +55,7 @@ print("#************************************************************************
 
 for page in pages:
     # Converts the string to a file. So that we can use read/write operations easily.
-    page = StringIO(page)
+    page = BytesIO(page)
     page.read(4)  # page header: 4 bytes: Always 00000100
     # Number of cookies in each page, first 4 bytes after the page header in every page.
     num_cookies = unpack('<i', page.read(4))[0]
@@ -71,7 +71,7 @@ for page in pages:
     for offset in cookie_offsets:
         page.seek(offset)  # Move the page pointer to the cookie starting point
         cookiesize = unpack('<i', page.read(4))[0]  # fetch cookie size
-        cookie = StringIO(page.read(cookiesize))  # read the complete cookie
+        cookie = BytesIO(page.read(cookiesize))  # read the complete cookie
 
         cookie.read(4)  # unknown
 
@@ -120,28 +120,28 @@ for page in pages:
         url = ''
         u = cookie.read(1)
         while unpack('<b', u)[0] != 0:
-            url = url+str(u)
+            url = url+u.decode()
             u = cookie.read(1)
 
         cookie.seek(nameoffset-4)  # fetch cookie name from name offset
         name = ''
         n = cookie.read(1)
         while unpack('<b', n)[0] != 0:
-            name = name+str(n)
+            name = name+n.decode()
             n = cookie.read(1)
 
         cookie.seek(pathoffset-4)  # fetch cookie path from path offset
         path = ''
         pa = cookie.read(1)
         while unpack('<b', pa)[0] != 0:
-            path = path+str(pa)
+            path = path+pa.decode()
             pa = cookie.read(1)
 
         cookie.seek(valueoffset-4)  # fetch cookie value from value offset
         value = ''
         va = cookie.read(1)
         while unpack('<b', va)[0] != 0:
-            value = value+str(va)
+            value = value+va.decode()
             va = cookie.read(1)
 
         print('Cookie : ' + name + '=' + value + '; domain='+url+'; path=' +
